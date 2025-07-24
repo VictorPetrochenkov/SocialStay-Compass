@@ -14,6 +14,10 @@ SocialStay Compass — это open-source решение для **момента
 - ⚡ **Низкая латентность**: < 200 мс от запроса до карточки.  
 - 📈 **Готовые метрики**: Recall@5, NDCG@5, CTR → Бронь.
 
+# Просмотр
+https://htmlpreview.github.io/?https://raw.githubusercontent.com/VictorPetrochenkov/SocialStay-Compass/refs/heads/main/index_0.html
+
+
 ## Быстрый старт
 ```bash
 git clone https://github.com/your-org/SocialStay-Compass.git
