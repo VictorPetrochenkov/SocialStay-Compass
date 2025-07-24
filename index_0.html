@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>«Друзья рекомендуют» – Персонализированный подбор отелей</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #222;
+            background: #fdfdfd;
+        }
+        header {
+            background: linear-gradient(135deg, #1e5799 0%, #2989d8 50%, #207cca 100%);
+            color: #fff;
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.4rem;
+        }
+        header p {
+            margin: 0.5rem 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        h2 {
+            color: #1e5799;
+            margin-top: 2.5rem;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.3rem;
+        }
+        ul.check-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        ul.check-list li::before {
+            content: '✔';
+            color: #2989d8;
+            font-weight: bold;
+            margin-right: 0.6rem;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 0.15em 0.3em;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #f0f4f8;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #777;
+            margin: 3rem 0 2rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>«Друзья рекомендуют»</h1>
+    <p>Персонализированный подбор отелей на основе данных о клиенте</p>
+</header>
+
+<main>
+
+    <h2>1. Цель проекта</h2>
+    <p>
+        Создать модель, которая по <strong>общедоступным признакам клиента</strong>
+        предлагает один или несколько отелей, где он с высокой вероятностью захочет
+        отдохнуть. При этом «друзья» (любые социальные связи) служат дополнительным
+        усилителем качества рекомендации.
+    </p>
+
+    <h2>2. Задачи проекта</h2>
+    <ul class="check-list">
+        <li>Сформировать и очистить датасет «клиент ↔ отель факт».</li>
+        <li>Выделить набор признаков, которые клиент <em>может</em> предоставить.</li>
+        <li>Разработать и обучить модель ранжирования/классификации.</li>
+        <li>Оценить метрики качества и бизнес-ценность.</li>
+        <li>Внедрить API-эндпоинт «дай мне подходящие отели».</li>
+    </ul>
+
+    <h2>3. Фабула (коротко)</h2>
+    <p>
+        Путешественник заходит в приложение. Он не вводит даты и не ищет
+        «свободные номера». Система сразу видит его профиль и показывает
+        3-5 отелей, в которых, судя по «похожим» людям и отзывам друзей, ему
+        почти наверняка понравится отдыхать. Пользователь может сразу
+        забронировать или добавить в «мечты».
+    </p>
+
+    <h2>4. Подробное описание</h2>
+
+    <h3>4.1. Источники данных</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Источник</th>
+                <th>Что даёт</th>
+                <th>Частота обновления</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CRM / Личный кабинет</td>
+                <td>демография, лояльность, история поездок</td>
+                <td>ежедневно</td>
+            </tr>
+            <tr>
+                <td>Соцсети (опционально)</td>
+                <td>список друзей, лайки/чек-ины</td>
+                <td>по OAuth</td>
+            </tr>
+            <tr>
+                <td>OTA-бронирования</td>
+                <td>hotel_id, даты, цена, канал</td>
+                <td>в реальном времени</td>
+            </tr>
+            <tr>
+                <td>Каталог отелей</td>
+                <td>координаты, звёзды, сервисы</td>
+                <td>еженедельно</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>4.2. Список фичей, которые клиент может предоставить</h3>
+    <p>Достаточно одного заполненного профиля или авторизации через соцсеть.</p>
+    <ul class="check-list">
+        <li><code>age</code> — возраст (дискретно 18-24, 25-34, …)</li>
+        <li><code>gender</code> — пол (M / F / other / unknown)</li>
+        <li><code>family_status</code> — single, couple, family_with_kids, group</li>
+        <li><code>home_country</code> — ISO-3166</li>
+        <li><code>home_city_population</code> — tier 1/2/3 &lt; 100 k/100 k-1 M/&gt;1 M</li>
+        <li><code>loyalty_tier</code> — none / silver / gold / platinum</li>
+        <li><code>avg_trip_length_nights</code> — медиана по истории</li>
+        <li><code>price_preference_bucket</code> — budget / mid / luxury</li>
+        <li><code>preferred_trip_purpose</code> — leisure / business / mixed</li>
+        <li><code>preferred_climate</code> — sea, mountains, city, ski, exotic</li>
+        <li><code>friends_hotel_ids</code> — список отелей, где побывали ≥1 друг (опционально)</li>
+        <li><code>device_type</code> — ios / android / web</li>
+    </ul>
+
+    <h3>4.3. Целевая переменная</h3>
+    <p>
+        <code>hotel_id</code> из каталога (≈ 25 000 уникальных отелей).<br>
+        Задача формулируется как <strong>softmax-классификация</strong> или
+        <strong>nearest-neighbor retrieval</strong>.
+    </p>
+
+    <h3>4.4. Как будет работать MVP</h3>
+    <ol>
+        <li>Пользователь авторизуется (email или OAuth) → система собирает 12 фичей.</li>
+        <li>Модель возвращает 5 hotel_id, отсортированных по вероятности.</li>
+        <li>UI показывает карточки отелей с пометкой «2 друга останавливались здесь».</li>
+        <li>Клик → переход к бронированию.</li>
+    </ol>
+
+    <h3>4.5. Оценка качества</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Метрика</th>
+                <th>Описание</th>
+                <th>Целевое значение</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Recall@5</td>
+                <td>доля пользователей, для которых «правильный» отель попал в топ-5</td>
+                <td>≥ 0.35</td>
+            </tr>
+            <tr>
+                <td>NDCG@5</td>
+                <td>позиционно-взвешенная точность ранжирования</td>
+                <td>≥ 0.50</td>
+            </tr>
+            <tr>
+                <td>CTR → Бронь</td>
+                <td>от клика по карточке до успешной оплаты</td>
+                <td>+15 % к baseline</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>4.6. Дальнейший путь</h3>
+    <ul class="check-list">
+        <li>Добавить контекстные фичи (дата вылета, длительность).</li>
+        <li>Учитывать насыщенность отеля, чтобы не рекомендовать sold-out.</li>
+        <li>Online-learning по фидбеку (лайк/дизлайк карточки).</li>
+        <li>Расширить соц-граф до 2-й степени друзей.</li>
+    </ul>
+
+</main>
+
+<footer>
+    © 2024 – проект «Друзья рекомендуют»<br>
+    Документ подготовлен для команды Data Science
+</footer>
+
+</body>
+</html>
