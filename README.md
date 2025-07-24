@@ -18,3 +18,32 @@ SocialStay Compass — это open-source решение для **момента
 ```bash
 git clone https://github.com/your-org/SocialStay-Compass.git
 cd SocialStay-Compass
+Структура репозитория
+text
+
+SocialStay-Compass/
+├── data/               # сырые и обработанные данные
+├── notebooks/          # EDA, эксперименты
+├── src/                # исходный код
+│   ├── features/
+│   ├── models/
+│   └── api/
+├── tests/              # unit-тесты
+├── configs/            # yaml-конфиги
+└── docs/               # дополнительная документация
+Датасет
+Каждая строка — это клиент + hotel_id факт.
+Обязательные признаки клиента: age, gender, family_status, home_country, loyalty_tier, price_preference_bucket, preferred_climate, friends_hotel_ids и др.
+
+Метрики
+Метрика	Целевое значение
+Recall@5	≥ 0.35
+NDCG@5	≥ 0.50
+CTR→Бронь	+15 % к baseline
+Roadmap
+ Контекстные фичи (дата вылета, длительность).
+ Фильтр «sold-out» в реальном времени.
+ Online-learning по фидбеку пользователя.
+ Расширение соц-графа до 2-й степени друзей.
+Лицензия
+MIT © SocialStay Compass Team
